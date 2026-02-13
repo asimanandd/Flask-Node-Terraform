@@ -2,8 +2,8 @@ provider "aws" {
   region = var.region
 }
 
-resource "aws_security_group" "flask_node_sg" {
-  name = "flask-node-sg"
+resource "aws_security_group" "app_sg" {
+  name = "flask-express-sg"
 
   ingress {
     from_port   = 22
@@ -13,15 +13,15 @@ resource "aws_security_group" "flask_node_sg" {
   }
 
   ingress {
-    from_port   = 5000
-    to_port     = 5000
+    from_port   = 3000
+    to_port     = 3000
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
-    from_port   = 3000
-    to_port     = 3000
+    from_port   = 5000
+    to_port     = 5000
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -35,38 +35,13 @@ resource "aws_security_group" "flask_node_sg" {
 }
 
 resource "aws_instance" "app_server" {
-  ami           = var.ami
+  ami           = "ami-0f5ee92e2d63afc18"
   instance_type = var.instance_type
-  security_groups = [aws_security_group.flask_node_sg.name]
+  key_name      = var.key_name
 
-  user_data = <<-EOF
-        #!/bin/bash
-        apt update -y
-
-        # Install Python
-        apt install python3 python3-pip -y
-        pip3 install flask
-
-        # Install Node
-        apt install nodejs npm -y
-
-        # Install Git
-        apt install git -y
-
-        # Clone repo
-        git clone https://github.com/asimanandd/Flask-Node-Terraform.git
-
-        cd Flask-Node-Terraform/Backend
-        pip3 install -r requirements.txt
-        nohup python3 app.py &
-
-        cd ../Frontend
-        npm install
-        nohup node server.js &
-        EOF
-
+  security_groups = [aws_security_group.app_sg.name]
 
   tags = {
-    Name = "Flask-Node-Single-EC2"
+    Name = "Flask-Express-Single-EC2"
   }
 }
